@@ -355,6 +355,9 @@ create /backstores/block/${assetName}
                   },
                 }
               );
+  
+              await GeneralUtils.sleep(2000); // let things settle
+
               break;
 
           default:
@@ -792,6 +795,8 @@ delete ${assetName}
                 },
               }
             );
+
+            await GeneralUtils.sleep(2000); // let things settle
 
             break;
 
