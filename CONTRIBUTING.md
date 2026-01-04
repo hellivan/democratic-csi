@@ -62,6 +62,10 @@ cd ~/democratic-csi
 ./hack/run.sh -c ./hack/config.yaml
 ```
 
+>![Note]
+> For running tests with democratic-csi the authentication needs to be disabled, as
+> it always initiates connections to the share without authentication.
+
 ##### Keeping Files in Sync
 
 Use these methods to keep your local files synchronized with the Vagrant VM:

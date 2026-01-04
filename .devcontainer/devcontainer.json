@@ -3,7 +3,9 @@
 {
 	"name": "democratic-csi",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+	// regarding versioning the first number is the devcontainer image version,
+	// the second is the Node.js version, and the third is the OS version.
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-20-bookworm",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {

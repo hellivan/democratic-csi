@@ -20,6 +20,7 @@ class ControllerZfsGenericDriver extends ControllerZfsBaseDriver {
     this.targetCliMutex = new Mutex();
     this.nvmetCliMutex = new Mutex();
     this.spdkCliMutex = new Mutex();
+    this.pcsMutex = new Mutex();
   }
 
   getExecClient() {
@@ -1000,24 +1001,27 @@ save_config filename=${this.options.nvmeof.shareStrategySpdkCli.configPath}
     let options = {
       pty: true,
     };
-    let response = await execClient.exec(
-      execClient.buildCommand(command, args),
-      options
-    );
-    driver.ctx.logger.verbose(
-      "pcs response: " + JSON.stringify(response)
-    );
-        
-    // Handle idempotence for create commands
-    if (response.code == 1 && response.stdout.includes("already exists")) {
-      driver.ctx.logger.verbose("pcs resource already exists, ignoring error (setting response.code=0)");
-      response.code = 0;
-    }
 
-    if (response.code != 0) {
-      throw response;
-    }
-    return response;
+    return driver.pcsMutex.runExclusive(async () => {
+      let response = await execClient.exec(
+        execClient.buildCommand(command, args),
+        options
+      );
+      driver.ctx.logger.verbose(
+        "pcs response: " + JSON.stringify(response)
+      );
+          
+      // Handle idempotence for create commands
+      if (response.code == 1 && response.stdout.includes("already exists")) {
+        driver.ctx.logger.verbose("pcs resource already exists, ignoring error (setting response.code=0)");
+        response.code = 0;
+      }
+
+      if (response.code != 0) {
+        throw response;
+      }
+      return response;
+    });
   }
 
   async targetCliCommand(data) {
