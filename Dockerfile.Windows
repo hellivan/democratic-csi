@@ -76,8 +76,8 @@ COPY . .
 ######################
 # actual image
 ######################
-#FROM mcr.microsoft.com/windows/nanoserver:${NANO_BASE_TAG}
-FROM mcr.microsoft.com/oss/kubernetes/windows-host-process-containers-base-image:v1.0.0
+FROM mcr.microsoft.com/windows/nanoserver:${NANO_BASE_TAG}
+#FROM mcr.microsoft.com/oss/kubernetes/windows-host-process-containers-base-image:v1.0.0
 
 #SHELL ["cmd.exe", "/s" , "/c"]
 
