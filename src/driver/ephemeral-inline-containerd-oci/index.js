@@ -116,6 +116,10 @@ class EphemeralInlineContainerDOciDriver extends CsiBaseDriver {
   }
 
   /**
+   * TODO: add Probe here with ctr check to ensure socket is alive
+   */
+
+  /**
    *
    * @returns CTR
    */
@@ -273,7 +277,7 @@ class EphemeralInlineContainerDOciDriver extends CsiBaseDriver {
 
     // create publish directory
     if (!fs.existsSync(target_path)) {
-      await fs.mkdirSync(target_path, { recursive: true });
+      fs.mkdirSync(target_path, { recursive: true });
     }
 
     if (process.platform != "win32") {

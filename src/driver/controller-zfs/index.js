@@ -3,6 +3,7 @@ const { CsiBaseDriver } = require("../index");
 const { GrpcError, grpc } = require("../../utils/grpc");
 const GeneralUtils = require("../../utils/general");
 const getLargestNumber = require("../../utils/general").getLargestNumber;
+const Mount = require("../../utils/mount").Mount;
 
 const Handlebars = require("handlebars");
 const uuidv4 = require("uuid").v4;
@@ -1193,10 +1194,21 @@ class ControllerZfsBaseDriver extends CsiBaseDriver {
         properties = properties[datasetName];
         driver.ctx.logger.debug("zfs props data: %j", properties);
 
+        // get mountpoint
+        let mountpoint = properties.mountpoint.value;
+        if (mountpoint == "legacy") {
+          let mount = new Mount();
+          let mounts = await mount.getDeviceMounts(datasetName);
+
+          if (mounts.filesystems[0]) {
+            mountpoint = mounts.filesystems[0].target;
+          }
+        }
+
         // set mode
         if (driverOptions.zfs.datasetPermissionsMode) {
           await driver.setFilesystemMode(
-            properties.mountpoint.value,
+            mountpoint,
             driverOptions.zfs.datasetPermissionsMode
           );
         }
@@ -1209,7 +1221,7 @@ class ControllerZfsBaseDriver extends CsiBaseDriver {
             .length > 0
         ) {
           await driver.setFilesystemOwnership(
-            properties.mountpoint.value,
+            mountpoint,
             driverOptions.zfs.datasetPermissionsUser,
             driverOptions.zfs.datasetPermissionsGroup
           );
@@ -1225,10 +1237,7 @@ class ControllerZfsBaseDriver extends CsiBaseDriver {
             "setfacl"
           );
           for (const acl of driverOptions.zfs.datasetPermissionsAcls) {
-            command = execClient.buildCommand(aclBinary, [
-              acl,
-              properties.mountpoint.value,
-            ]);
+            command = execClient.buildCommand(aclBinary, [acl, mountpoint]);
             if ((await this.getWhoAmI()) != "root") {
               command = (await this.getSudoPath()) + " " + command;
             }

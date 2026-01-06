@@ -76,14 +76,15 @@ COPY . .
 ######################
 # actual image
 ######################
-FROM mcr.microsoft.com/windows/nanoserver:${NANO_BASE_TAG}
+#FROM mcr.microsoft.com/windows/nanoserver:${NANO_BASE_TAG}
+FROM mcr.microsoft.com/oss/kubernetes/windows-host-process-containers-base-image:v1.0.0
 
-SHELL ["cmd.exe", "/s" , "/c"]
+#SHELL ["cmd.exe", "/s" , "/c"]
 
 #https://github.com/PowerShell/PowerShell-Docker/issues/236
 # NOTE: this works for non-host process containers, but host process containers will have specials PATH requirements
 # C:\Windows\System32\WindowsPowerShell\v1.0\
-ENV PATH="C:\Windows\system32;C:\Windows;C:\PowerShell;C:\app\bin;"
+#ENV PATH="C:\Windows\system32;C:\Windows;C:\PowerShell;C:\app\bin;"
 
 ENV DEMOCRATIC_CSI_IS_CONTAINER=true
 ENV NODE_ENV=production
@@ -93,7 +94,7 @@ LABEL org.opencontainers.image.url https://github.com/democratic-csi/democratic-
 LABEL org.opencontainers.image.licenses MIT
 
 # install powershell
-COPY --from=build /PowerShell /PowerShell
+#COPY --from=build /PowerShell /PowerShell
 
 # install app
 COPY --from=build /app /app

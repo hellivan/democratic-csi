@@ -184,7 +184,7 @@ jobs:
           TRUENAS_PASSWORD: ${{ secrets.SANITY_TRUENAS_PASSWORD }}
 
   # ssh-based drivers
-  csi-sanity-zfs-generic:
+  csi-sanity-zfs-generic-targetcli:
     needs:
       - build-npm-linux-amd64
     strategy:
@@ -192,7 +192,6 @@ jobs:
       max-parallel: 1
       matrix:
         config:
-          #- zfs-generic/iscsi-pcs.yaml # TODO: enable this once the server is setup
           - zfs-generic/iscsi-targetcli.yaml
           - zfs-generic/nfs.yaml
           - zfs-generic/smb.yaml
@@ -213,7 +212,36 @@ jobs:
           ci/bin/run.sh
         env:
           TEMPLATE_CONFIG_FILE: "./ci/configs/${{ matrix.config }}"
-          SERVER_HOST: ${{ secrets.SANITY_ZFS_GENERIC_HOST }}
+          SERVER_HOST: ${{ secrets.SANITY_ZFS_GENERIC_TARGETCLI_HOST }}
+          SERVER_USERNAME: ${{ secrets.SANITY_ZFS_GENERIC_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SANITY_ZFS_GENERIC_PASSWORD }}
+
+  csi-sanity-zfs-generic-pcs:
+    needs:
+      - build-npm-linux-amd64
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        config:
+          - zfs-generic/iscsi-pcs.yaml
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - csi-sanity-zfs-generic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: node-modules-linux-amd64
+      - name: csi-sanity
+        run: |
+          # run tests
+          ci/bin/run.sh
+        env:
+          TEMPLATE_CONFIG_FILE: "./ci/configs/${{ matrix.config }}"
+          SERVER_HOST: ${{ secrets.SANITY_ZFS_GENERIC_PCS_HOST }}
           SERVER_USERNAME: ${{ secrets.SANITY_ZFS_GENERIC_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.SANITY_ZFS_GENERIC_PASSWORD }}
 
@@ -439,7 +467,8 @@ jobs:
       - csi-sanity-synology-dsm7
       - csi-sanity-truenas-scale-25_10
       - csi-sanity-truenas-core-13_0
-      - csi-sanity-zfs-generic
+      - csi-sanity-zfs-generic-targetcli
+      - csi-sanity-zfs-generic-pcs
       - csi-sanity-objectivefs
       - csi-sanity-client
       - csi-sanity-client-windows
@@ -480,7 +509,8 @@ jobs:
       - csi-sanity-synology-dsm7
       - csi-sanity-truenas-scale-25_10
       - csi-sanity-truenas-core-13_0
-      - csi-sanity-zfs-generic
+      - csi-sanity-zfs-generic-targetcli
+      - csi-sanity-zfs-generic-pcs
       - csi-sanity-objectivefs
       - csi-sanity-client
       - csi-sanity-client-windows

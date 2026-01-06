@@ -3800,9 +3800,13 @@ class CsiBaseDriver {
     if (!volume_path) {
       throw new GrpcError(grpc.status.INVALID_ARGUMENT, `missing volume_path`);
     }
+
     const block_path = volume_path + "/block_device";
     const capacity_range = call.request.capacity_range;
     const volume_capability = call.request.volume_capability;
+
+    // placeholder
+    let capacity_bytes;
 
     switch (driver.__getNodeOsDriver()) {
       case NODE_OS_DRIVER_POSIX:
@@ -3864,6 +3868,7 @@ class CsiBaseDriver {
             await GeneralUtils.sleep(2000);
           }
 
+          // is_formatted = false;
           if (is_formatted && access_type == "mount") {
             fs_info = await filesystem.getDeviceFilesystemInfo(device);
             fs_type = fs_info.type;
@@ -3898,13 +3903,20 @@ class CsiBaseDriver {
                   );
               }
             }
+
+            result = await mount.getMountDetails(device_path, ["size"]);
+            capacity_bytes = result.size;
           } else {
             //block device unformatted
-            return {};
+            result = await filesystem.getBlockDevice(device);
+            capacity_bytes = result.size;
+            return { capacity_bytes };
           }
         } else {
           // not block device
-          return {};
+          result = await mount.getMountDetails(device_path, ["size"]);
+          capacity_bytes = result.size;
+          return { capacity_bytes };
         }
 
         break;
@@ -4069,7 +4081,7 @@ class CsiBaseDriver {
         );
     }
 
-    return {};
+    return { capacity_bytes };
   }
 }
 
