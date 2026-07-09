@@ -1,0 +1,63 @@
+# Lightweight fork build: builds the Linux image and pushes it to GHCR
+# under your own account (ghcr.io/<owner>/democratic-csi).
+#
+# This is intentionally separate from main.yml (which requires self-hosted
+# runners + maintainer secrets and runs csi-sanity against real hardware).
+#
+# Produces a single immutable tag per commit: <branch>-<shortsha>
+# (the branch name is resolved automatically from the pushed ref, so it works
+# for any branch you push -- nothing is hardcoded). Pin this tag in Helm to
+# reproduce an exact build.
+name: fork-image
+
+on:
+  push:
+    branches:
+      - testing
+  workflow_dispatch:
+
+concurrency:
+  group: fork-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/democratic-csi
+          tags: |
+            type=sha,prefix={{branch}}-
+          # Do NOT emit a "latest" tag: this is a fork/pre-release image.
+          flavor: |
+            latest=false
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
